@@ -1,0 +1,38 @@
+#!/usr/bin/perl
+#Make a correctly formatted UCSC link
+#Brandon Marzullo - May 2014
+
+use strict;
+use warnings;
+use Getopt::Long;
+use File::Basename;
+
+# Set default values for options
+my $trackType = '';
+my $userName = '';
+my $password = '';
+my $server = 'rant.ccr.buffalo.edu';
+# Pull optoins from command line
+# The options can be used as either the short or long names with one or two dashes
+GetOptions(	't|trackType:s' => \$trackType,
+		'u|userName=s' => \$userName,
+		'p|password=s' => \$password,
+		's|server:s' => \$server)
+	or die("Error in command line arguments\nUseage: makeUcscLink [--server] --tracktype --userName --password bamFile.bam\n");
+# Remaining arguments are the files to use
+my @extraArgs = @ARGV;
+
+# Print out URL strings for each file
+foreach (@extraArgs) {
+	my ($file,$dir,$ext) = fileparse($_, qr/\.\D.*/);
+	# if the path is a subdirectory of /data/ftp/USERNAME
+	# remove that portion of the path and print the URL
+	if ( /^\/data\/ftp\/$userName(.*)/ ) {
+		$dir = $1;
+		print "track type=$trackType name=\"$file-$trackType\" bigDataUrl=ftp://$userName:$password\@$server$dir\n"
+	}	
+	# Else die until I can figure out what else to do.
+	else { die("The files must be in /data/ftp/$userName directory\n"); }
+}
+
+__END__

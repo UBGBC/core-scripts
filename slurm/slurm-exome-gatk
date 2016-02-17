@@ -1,0 +1,69 @@
+#!/bin/bash
+#SBATCH --export=SLURM_CPUS_PER_TASK,SLURM_JOB_NAME,SLURM_NTASKS_PER_NODE,SLURM_PRIO_PROCESS,SLURM_SUBMIT_DIR,SLURM_SUBMIT_HOST
+#
+#SBATCH --job-name=bwa-mem
+#SBATCH --mail-type=END
+#SBATCH --mail-user=jbard@buffalo.edu
+#
+#SBATCH --output=output.out
+#SBATCH --error=error.out
+
+#SBATCH --time=48:00:00
+#SBATCH --nodes=1
+#SBATCH --tasks-per-node=1
+#SBATCH --cpus-per-task=12
+#SBATCH --partition=supporters
+#
+
+# syntax:
+# sbatch slurm-bwa-mem -g [genome file] -a [file 1] -b [file 2] -o [output]
+
+tstart=`date`
+echo "###### start time: $tstart"
+
+# spit out some basic SLURM information
+echo "SLURM_JOBID         = "$SLURM_JOB_ID
+echo "SLURM_JOB_NAME      = "$SLURM_JOB_NAME
+echo "SLURM_SUBMIT_DIR    = "$SLURM_SUBMIT_DIR
+echo "SLURM_NODELIST      = "`nodeset -e $SLURM_NODELIST`
+echo "SLURM_NPROCS        = "$SLURM_NPROCS
+echo "SLURM_NNODES        = "$SLURM_NNODES
+echo "SLURM_CPUS_PER_TASK = "$SLURM_CPUS_PER_TASK
+echo "SLURMTMPDIR         = "$SLURMTMPDIR
+
+# retreiving user inputed information
+while getopts g:a:b:o:s:l: option
+do
+	case "${option}"
+	in
+		g) GENOME=${OPTARG};;
+		a) FILE1=${OPTARG};;
+		b) FILE2=${OPTARG};;
+		o) OUTPUT=${OPTARG};;
+                s) SAMPLENAME=${OPTARG};;
+                l) LANE=${OPTARG};;
+	esac
+done
+
+# spit out user inputed information
+echo "genome = "$GENOME
+echo "file1  = "$FILE1
+echo "file2  = "$FILE2
+echo "output = "$OUTPUT
+
+# load bowtie module
+echo "Loading Bwa . . ."
+module load bwa/0.7.6a
+module load picard-tools/1.59 
+# launch job
+echo "Launching Bowtie . . ."
+bwa mem -t 8 -R '@RG\tID:'$SAMPLENAME'.'$LANE'\tCN:UB-GBC\tPL:ILLUMINA\tSM:'$SAMPLENAME'\tLB:LIB-'$SAMPLENAME $GENOME $FILE1 $FILE2 > $OUTPUT
+
+java -Xmx24g -Djava.io.tmpdir=/panasas/projects/mjbuck/ -jar $PICARD_TOOLS/SortSam.jar SO=coordinate INPUT=$OUTPUT OUTPUT=$OUTPUT.bam VALIDATION_STRINGENCY=LENIENT CREATE_INDEX=true
+
+# done
+echo "All done! ;)"
+
+tend=`date`
+echo "###### end time: $tend"
+
