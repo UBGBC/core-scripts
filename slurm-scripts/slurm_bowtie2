@@ -1,0 +1,67 @@
+#!/bin/bash
+#SBATCH --export=SLURM_CPUS_PER_TASK,SLURM_JOB_NAME,SLURM_NTASKS_PER_NODE,SLURM_PRIO_PROCESS,SLURM_SUBMIT_DIR,SLURM_SUBMIT_HOST
+#
+#SBATCH --job-name=bowtie
+#SBATCH --mail-type=END
+#SBATCH --mail-user=jbard@buffalo.edu
+#
+#SBATCH --output=output.out
+#SBATCH --error=error.out
+
+#SBATCH --time=24:00:00
+#SBATCH --nodes=1
+#SBATCH --tasks-per-node=1
+#SBATCH --cpus-per-task=8
+#SBATCH --partition=supporters
+#
+
+# syntax:
+# sbatch slurm-bowtie -g [genome file] -a [file 1] -b [file 2] -o [output]
+
+tstart=`date`
+echo "###### start time: $tstart"
+
+# spit out some basic SLURM information
+echo "SLURM_JOBID         = "$SLURM_JOB_ID
+echo "SLURM_JOB_NAME      = "$SLURM_JOB_NAME
+echo "SLURM_SUBMIT_DIR    = "$SLURM_SUBMIT_DIR
+echo "SLURM_NODELIST      = "`nodeset -e $SLURM_NODELIST`
+echo "SLURM_NPROCS        = "$SLURM_NPROCS
+echo "SLURM_NNODES        = "$SLURM_NNODES
+echo "SLURM_CPUS_PER_TASK = "$SLURM_CPUS_PER_TASK
+echo "SLURMTMPDIR         = "$SLURMTMPDIR
+
+# retreiving user inputed information
+while getopts g:a:b:o: option
+do
+	case "${option}"
+	in
+		g) GENOME=${OPTARG};;
+		a) FILE1=${OPTARG};;
+		b) FILE2=${OPTARG};;
+		o) OUTPUT=${OPTARG};;
+	esac
+done
+
+# spit out user inputed information
+echo "genome = "$GENOME
+echo "file1  = "$FILE1
+#echo "file2  = "$FILE2
+echo "output = "$OUTPUT
+
+# load bowtie module
+echo "Loading Bowtie . . ."
+module load bowtie/2-2.2.3  
+
+# launch job
+echo "Launching Bowtie2 . . ."
+bowtie2 -p 12 -x $GENOME -1 $FILE1 -2 $FILE2 -S $OUTPUT
+#bowtie -m 1 -X 2000 -p 8 -S $GENOME -1 $FILE1 -2 $FILE2 > $OUTPUT
+#bowtie -m 1 -p 8 -S $GENOME $FILE1 > $OUTPUT
+
+# done
+echo "All done! ;)"
+
+tend=`date`
+echo "###### end time: $tend"
+
