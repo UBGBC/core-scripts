@@ -1,8 +1,15 @@
 #!/bin/sh
-
-#[jbard@rush:/projects/mjbuck/Buck_Lab_Members/jbard/RSEM-Rose/RSEM_MS/FASTQ]$ for i in $(ls *Rep1_1* | cut -f1 -d"_"); do echo $i ; sbatch /projects/mjbuck/Scripts/slurm-rsem -g /projects/mjbuck/Buck_Lab_Members/jbard/RSEM-Rose/R
-#[jbard@rush:/projects/mjbuck/Buck_Lab_Members/jbard/RSEM-Rose/RSEM_MS/FASTQ]$ for i in $(ls *Rep2_1* | cut -f1 -d"_"); do echo $i ; sbatch /projects/mjbuck/Scripts/slurm-rsem -g /projects/mjbuck/Buck_Lab_Members/jbard/RSEM-Rose/R
-
+##SBATCH --partition=general-compute
+#SBATCH --time=36:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=12
+#SBATCH --job-name="TOPHAT"
+#SBATCH --output=slurm.log
+#SBATCH --mail-user=jbard@buffalo.edu
+#SBATCH --mail-type=ALL
+##SBATCH --requeue
+#Specifies that the job will be requeued after a node failure.
+#The default is that the job will not be requeued.
 
 vflag=off
 input=
@@ -24,19 +31,6 @@ do
     esac
 done
 shift `expr $OPTIND - 1`
-
-##SBATCH --partition=general-compute
-#SBATCH --time=36:00:00
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=12
-#SBATCH --job-name="TOPHAT"
-#SBATCH --output=slurm.log
-#SBATCH --mail-user=jbard@buffalo.edu
-#SBATCH --mail-type=ALL
-##SBATCH --requeue
-#Specifies that the job will be requeued after a node failure.
-#The default is that the job will not be requeued.
-
 
 # rsem-calculate-expression -p 8 \--paired-end [fastq] [fastq] [genome] [output]
 
@@ -63,7 +57,6 @@ echo "output: $output"
 module list
 
 rsem-calculate-expression -p 12 --paired-end $fastq1 $fastq2 $genome $output
-
 
 ulimit -s unlimited
 #

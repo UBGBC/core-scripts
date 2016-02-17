@@ -1,4 +1,15 @@
 #!/bin/sh
+##SBATCH --partition=supporters
+#SBATCH --time=50:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=12
+#SBATCH --job-name="TOPHAT"
+#SBATCH --output=slurm.log
+#SBATCH --mail-user=jbard@buffalo.edu
+#SBATCH --mail-type=ALL
+##SBATCH --requeue
+#Specifies that the job will be requeued after a node failure.
+#The default is that the job will not be requeued.
 
 vflag=off
 input=
@@ -21,19 +32,6 @@ do
 done
 shift `expr $OPTIND - 1`
 
-##SBATCH --partition=supporters
-#SBATCH --time=50:00:00
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=12
-#SBATCH --job-name="TOPHAT"
-#SBATCH --output=slurm.log
-#SBATCH --mail-user=jbard@buffalo.edu
-#SBATCH --mail-type=ALL
-##SBATCH --requeue
-#Specifies that the job will be requeued after a node failure.
-#The default is that the job will not be requeued.
-
-
 echo "SLURM_JOBID="$SLURM_JOBID
 echo "SLURM_JOB_NODELIST"=$SLURM_JOB_NODELIST
 echo "SLURM_NNODES"=$SLURM_NNODES
@@ -52,12 +50,10 @@ echo "Genome: $genome"
 echo "output: $output"
 echo "gtfFile: $gtf"
 
-
 module list
 
 tophat -G $gtf -p 8 --fusion-search -o $output $genome $input1 $input2
 ulimit -s unlimited
-#
 
 #
 echo "All Done!"
