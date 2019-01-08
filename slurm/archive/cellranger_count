@@ -1,0 +1,76 @@
+#!/bin/bash
+#SBATCH --export=SLURM_CPUS_PER_TASK,SLURM_JOB_NAME,SLURM_NTASKS_PER_NODE,SLURM_PRIO_PROCESS,SLURM_SUBMIT_DIR,SLURM_SUBMIT_HOST
+#
+#SBATCH --job-name=cellranger
+#SBATCH --mail-type=END
+#SBATCH --mail-user=julienka@buffalo.edu
+#
+#SBATCH --output=output.out
+#SBATCH --error=error.out
+
+#SBATCH --time=36:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=32
+#SBATCH --partition=largemem 
+#SBATCH --mem=512000
+#
+
+# syntax:
+# sbatch cellranger_slurm -id [name] -run [path] -csv [output]
+
+tstart=`date`
+echo "###### start time: $tstart"
+
+# spit out some basic SLURM information
+echo "SLURM_JOBID         = "$SLURM_JOB_ID
+echo "SLURM_JOB_NAME      = "$SLURM_JOB_NAME
+echo "SLURM_SUBMIT_DIR    = "$SLURM_SUBMIT_DIR
+echo "SLURM_NODELIST      = "`nodeset -e $SLURM_NODELIST`
+echo "SLURM_NPROCS        = "$SLURM_NPROCS
+echo "SLURM_NNODES        = "$SLURM_NNODES
+echo "SLURM_CPUS_PER_TASK = "$SLURM_CPUS_PER_TASK
+echo "SLURMTMPDIR         = "$SLURMTMPDIR
+
+# retreiving user inputed information
+while getopts i:f:t:s:c: option
+do
+	case "${option}"
+	in
+		i) ID=$OPTARG;;
+		f) FASTQ=$OPTARG;;
+                t) TRANS=$OPTARG;;
+		s) SAMPLE=$OPTARG;;
+                c) CELLS=$OPTARG;;
+	esac
+done
+shift `expr $OPTIND - 1`
+
+
+
+
+# spit out user inputed information
+echo "id = "$ID
+echo "fastq  = "$FASTQ
+echo "trans = "$TRANS
+echo "sample = "$SAMPLE
+echo "cells = "$CELLS
+
+# load bowtie module
+echo "Loading Bowtie . . ."
+module use /projects/academic/gbcstaff/utils/modules/
+module load gbc-cellranger/2.0.1
+
+# launch job
+echo "Launching CellRanger count. . ."
+
+cellranger count --id=$ID --transcriptome=$TRANS --fastqs=$FASTQ --sample=$SAMPLE --expect-cells=$CELLS
+echo "count Done!!"
+
+
+
+# done
+echo "All done! ;)"
+
+tend=`date`
+echo "###### end time: $tend"
+

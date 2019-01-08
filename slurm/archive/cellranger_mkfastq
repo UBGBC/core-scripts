@@ -1,0 +1,66 @@
+#!/bin/bash
+#SBATCH --export=SLURM_CPUS_PER_TASK,SLURM_JOB_NAME,SLURM_NTASKS_PER_NODE,SLURM_PRIO_PROCESS,SLURM_SUBMIT_DIR,SLURM_SUBMIT_HOST
+#
+#SBATCH --job-name=cellranger
+#SBATCH --mail-type=END
+#SBATCH --mail-user=julien@buffalo.edu
+#
+#SBATCH --output=output.out
+#SBATCH --error=error.out
+
+#SBATCH --time=24:00:00
+#SBATCH --nodes=1
+#SBATCH --tasks-per-node=1
+#SBATCH --cpus-per-task=8
+#SBATCH --partition=supporters
+#
+
+# syntax:
+# sbatch cellranger_slurm -id [name] -run [path] -csv [output]
+
+tstart=`date`
+echo "###### start time: $tstart"
+
+# spit out some basic SLURM information
+echo "SLURM_JOBID         = "$SLURM_JOB_ID
+echo "SLURM_JOB_NAME      = "$SLURM_JOB_NAME
+echo "SLURM_SUBMIT_DIR    = "$SLURM_SUBMIT_DIR
+echo "SLURM_NODELIST      = "`nodeset -e $SLURM_NODELIST`
+echo "SLURM_NPROCS        = "$SLURM_NPROCS
+echo "SLURM_NNODES        = "$SLURM_NNODES
+echo "SLURM_CPUS_PER_TASK = "$SLURM_CPUS_PER_TASK
+echo "SLURMTMPDIR         = "$SLURMTMPDIR
+
+# retreiving user inputed information
+while getopts id:run:csv: option
+do
+	case "${option}"
+	in
+		id) ID=${OPTARG};;
+		run) RUN=${OPTARG};;
+		sheet) SHEET=${OPTARG};;
+	esac
+done
+
+# spit out user inputed information
+echo "id = "$ID
+echo "run  = "$RUN
+echo "sheet = "$OUTPUT
+
+# load bowtie module
+echo "Loading Bowtie . . ."
+module load gbc-cellranger/2.0.1
+module load gbc-bcl2fastq
+# launch job
+echo "Launching CellRanger mkfastq. . ."
+cellranger mkfastq $ID $RUN $SHEET
+echo "mkfastq Done!!"
+
+ 
+
+# done
+echo "All done! ;)"
+
+tend=`date`
+echo "###### end time: $tend"
+

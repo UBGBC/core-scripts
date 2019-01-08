@@ -1,0 +1,63 @@
+#!/bin/sh
+##SBATCH --partition=general-compute
+#SBATCH --time=50:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=12
+#SBATCH --job-name="bwa-mem"
+#SBATCH --output=slurm.log
+#SBATCH --mail-user=jbard@buffalo.edu
+#SBATCH --mail-type=ALL
+#SBATCH --qos=supporters
+##SBATCH --requeue
+#Specifies that the job will be requeued after a node failure.
+#The default is that the job will not be requeued.
+
+# syntax:
+# sbatch slurm-bwa-mem -g [genome file] -a [file 1] -b [file 2] -o [output]
+
+tstart=`date`
+echo "###### start time: $tstart"
+
+# spit out some basic SLURM information
+echo "SLURM_JOBID         = "$SLURM_JOB_ID
+echo "SLURM_JOB_NAME      = "$SLURM_JOB_NAME
+echo "SLURM_SUBMIT_DIR    = "$SLURM_SUBMIT_DIR
+echo "SLURM_NODELIST      = "`nodeset -e $SLURM_NODELIST`
+echo "SLURM_NPROCS        = "$SLURM_NPROCS
+echo "SLURM_NNODES        = "$SLURM_NNODES
+echo "SLURM_CPUS_PER_TASK = "$SLURM_CPUS_PER_TASK
+echo "SLURMTMPDIR         = "$SLURMTMPDIR
+
+# retreiving user inputed information
+while getopts g:a:b:o: option
+do
+	case "${option}"
+	in
+		g) GENOME=${OPTARG};;
+		a) FILE1=${OPTARG};;
+		b) FILE2=${OPTARG};;
+		o) OUTPUT=${OPTARG};;
+	esac
+done
+
+# spit out user inputed information
+echo "genome = "$GENOME
+echo "file1  = "$FILE1
+echo "file2  = "$FILE2
+echo "output = "$OUTPUT
+
+# load bowtie module
+echo "Loading Bwa . . ."
+module load bwa/0.7.13
+
+# launch job
+echo "Launching BWA . . ."
+#bowtie -m 1 -X 2000 -p 8 -S $GENOME -1 $FILE1 -2 $FILE2 > $OUTPUT
+bwa mem -t 10 $GENOME $FILE1 $FILE2 > $OUTPUT
+
+# done
+echo "All done! ;)"
+
+tend=`date`
+echo "###### end time: $tend"
+
